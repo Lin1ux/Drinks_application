@@ -13,7 +13,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,60 +39,71 @@ import kotlinx.coroutines.delay
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(viewModel: TimerViewModel,title: String?,description: String?,tablet : Boolean)
 {
-
-    Column()
-    {
-        //Napis z nazwą drinka
-        Box(
-
-            modifier =
-                if(!tablet) {
-                    Modifier.fillMaxWidth().height(150.dp).background(Color.DarkGray)
-                } else {
-                    Modifier.fillMaxWidth().height(100.dp).background(Color.DarkGray)
-                },
-            contentAlignment = Alignment.Center // Wyśrodkowanie tekstu
-        ) {
-            // Dodanie Text wewnątrz Box
-            Text(text = title ?: "Brak danych",style = TextStyle(color = Color.White, fontSize = 48.sp))
-        }
-        //Skrolowane rzeczy
-        LazyColumn()
-        {
-            //Składniki drinka
-            item()
+    Scaffold(topBar = {
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.DarkGray,
+                titleContentColor = Color.White
+            ),
+            title = { Text(text = title ?: "Brak danych",style = TextStyle(color = Color.White, fontSize = 48.sp), textAlign = TextAlign.Center)
+                /*Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center)
             {
-                // Dodanie Text wewnątrz Box
-                Column(modifier = Modifier.padding(15.dp))
-                {
-                    Box(
-                        modifier = Modifier.padding(15.dp).fillMaxWidth(),
-                        contentAlignment = Alignment.TopCenter)
-                    {
-                        Text(text = "Składniki",style = TextStyle(color = Color.Black, fontSize = 32.sp))
-                    }
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.TopStart)
-                    {
-                        Text(text = description ?: "Brak danych",style = TextStyle(color = Color.Black, fontSize = 20.sp))
-                    }
-
-
-                }
+                Text("Wybierz Drink")}*/
             }
-            //timer
-            item()
+        )
+    })
+    {innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding))
+        {
+            //Napis z nazwą drinka
+            /*Box(
+
+                modifier =
+                    Modifier.fillMaxWidth().background(Color.LightGray),
+                contentAlignment = Alignment.Center // Wyśrodkowanie tekstu
+            ) {
+                // Dodanie Text wewnątrz Box
+                Text(text = title ?: "Brak danych",style = TextStyle(color = Color.White, fontSize = 48.sp))
+            }*/
+            //Skrolowane rzeczy
+            LazyColumn()
             {
-                Timer(viewModel  = viewModel,tablet = false)
+                //Składniki drinka
+                item()
+                {
+                    // Dodanie Text wewnątrz Box
+                    Column(modifier = Modifier.padding(15.dp))
+                    {
+                        Box(
+                            modifier = Modifier.padding(15.dp).fillMaxWidth(),
+                            contentAlignment = Alignment.TopCenter)
+                        {
+                            Text(text = "Składniki",style = TextStyle(color = Color.Black, fontSize = 32.sp))
+                        }
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.TopStart)
+                        {
+                            Text(text = description ?: "Brak danych",style = TextStyle(color = Color.Black, fontSize = 20.sp))
+                        }
+
+
+                    }
+                }
+                //timer
+                item()
+                {
+                    Timer(viewModel  = viewModel,tablet = false)
+                }
             }
         }
     }
@@ -127,6 +142,7 @@ fun Timer(viewModel: TimerViewModel,tablet : Boolean)
                 )
                 {
                     Text(if(isRunning) {"Stop"} else {"Start"}, style = TextStyle(color = Color.White, fontSize = 32.sp))
+
                 }
                 Spacer(modifier = Modifier.weight(0.3f))
             }

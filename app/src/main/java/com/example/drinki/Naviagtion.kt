@@ -68,7 +68,6 @@ fun MainScreen(navController : NavController)
             TabletContentList(getDrinkList(),navController)
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

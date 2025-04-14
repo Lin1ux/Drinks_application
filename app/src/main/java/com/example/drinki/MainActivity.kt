@@ -24,8 +24,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardElevation
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,32 +93,48 @@ fun DrinkList() : List<Drink>
 }
 */
 //Wyświetla skrollowalną listę
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentList(drinks : List<Drink>, navController : NavController)
 {
-    LazyColumn()    //Układ kolumnowy, który pozwala na przewijanie jeśli się nie zmieszczą na ekranie
-    {
-        for(i in drinks.indices step 2) //Iterowanie co 2 indeksy
-        {
-            item()  //Element leniwej kolumny
+    Scaffold(topBar = {
+        TopAppBar(
+            modifier = Modifier.height(75.dp),
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.DarkGray,
+                titleContentColor = Color.White
+            ),
+            title = { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center)
             {
-                Row()   //Rząd aby uporządkować zawartość
+                Text("Wybierz Drink")}
+            }
+        )
+    })
+    { innePadding ->
+        LazyColumn(modifier = Modifier.padding(innePadding))    //Układ kolumnowy, który pozwala na przewijanie jeśli się nie zmieszczą na ekranie
+        {
+            for(i in drinks.indices step 2) //Iterowanie co 2 indeksy
+            {
+                item()  //Element leniwej kolumny
                 {
-                    Box(modifier = Modifier.weight(1f).padding(16.dp)) //Kontener do przechowania przycisków
+                    Row()   //Rząd aby uporządkować zawartość
                     {
-                        ImageCard(painter = drinks[i].image, contentDescriptor = drinks[i].description, title = drinks[i].title,navController = navController)
-                    }
-                    if (i+1<drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))
+                        Box(modifier = Modifier.weight(1f).padding(16.dp)) //Kontener do przechowania przycisków
                         {
-                            ImageCard(painter = drinks[i+1].image, contentDescriptor = drinks[i+1].description, title = drinks[i+1].title,navController = navController)
+                            ImageCard(painter = drinks[i].image, contentDescriptor = drinks[i].description, title = drinks[i].title,navController = navController)
                         }
-                    }
-                    else
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
+                        if (i+1<drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
                         {
+                            Box(modifier = Modifier.weight(1f).padding(16.dp))
+                            {
+                                ImageCard(painter = drinks[i+1].image, contentDescriptor = drinks[i+1].description, title = drinks[i+1].title,navController = navController)
+                            }
+                        }
+                        else
+                        {
+                            Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
+                            {
+                            }
                         }
                     }
                 }
@@ -124,58 +144,96 @@ fun ContentList(drinks : List<Drink>, navController : NavController)
 }
 
 //Wyświetlanie głównego ekranu na tabletach
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabletContentList(drinks : List<Drink>, navController : NavController)
 {
-    LazyColumn()    //Układ kolumnowy, który pozwala na przewijanie jeśli się nie zmieszczą na ekranie
-    {
-        for(i in drinks.indices step 4) //Iterowanie co 4 indeksy
-        {
-            item()  //Element leniwej kolumny
+    Scaffold(topBar = {
+        TopAppBar(
+            modifier = Modifier.height(75.dp),
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.DarkGray,
+                titleContentColor = Color.White
+            ),
+            title = { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center)
             {
-                Row()   //Rząd aby uporządkować zawartość
+                Text("Wybierz Drink")}
+            }
+        )
+    })
+    { innerPadding ->
+        LazyColumn(modifier = Modifier.padding(innerPadding))    //Układ kolumnowy, który pozwala na przewijanie jeśli się nie zmieszczą na ekranie
+        {
+            for (i in drinks.indices step 4) //Iterowanie co 4 indeksy
+            {
+                item()  //Element leniwej kolumny
                 {
-                    Box(modifier = Modifier.weight(1f).padding(16.dp)) //Kontener do przechowania przycisków
+                    Row()   //Rząd aby uporządkować zawartość
                     {
-                        ImageCard(painter = drinks[i].image, contentDescriptor = drinks[i].description, title = drinks[i].title,navController = navController)
-                    }
-                    if (i+1<drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))
+                        Box(
+                            modifier = Modifier.weight(1f).padding(16.dp)
+                        ) //Kontener do przechowania przycisków
                         {
-                            ImageCard(painter = drinks[i+1].image, contentDescriptor = drinks[i+1].description, title = drinks[i+1].title,navController = navController)
+                            ImageCard(
+                                painter = drinks[i].image,
+                                contentDescriptor = drinks[i].description,
+                                title = drinks[i].title,
+                                navController = navController
+                            )
                         }
-                    }
-                    else
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
+                        if (i + 1 < drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
                         {
+                            Box(modifier = Modifier.weight(1f).padding(16.dp))
+                            {
+                                ImageCard(
+                                    painter = drinks[i + 1].image,
+                                    contentDescriptor = drinks[i + 1].description,
+                                    title = drinks[i + 1].title,
+                                    navController = navController
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier.weight(1f).padding(16.dp)
+                            )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                            {
+                            }
                         }
-                    }
-                    if (i+2<drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))
+                        if (i + 2 < drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
                         {
-                            ImageCard(painter = drinks[i+2].image, contentDescriptor = drinks[i+2].description, title = drinks[i+2].title,navController = navController)
+                            Box(modifier = Modifier.weight(1f).padding(16.dp))
+                            {
+                                ImageCard(
+                                    painter = drinks[i + 2].image,
+                                    contentDescriptor = drinks[i + 2].description,
+                                    title = drinks[i + 2].title,
+                                    navController = navController
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier.weight(1f).padding(16.dp)
+                            )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                            {
+                            }
                         }
-                    }
-                    else
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
+                        if (i + 3 < drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
                         {
-                        }
-                    }
-                    if (i+3<drinks.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))
-                        {
-                            ImageCard(painter = drinks[i+3].image, contentDescriptor = drinks[i+3].description, title = drinks[i+3].title,navController = navController)
-                        }
-                    }
-                    else
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
-                        {
+                            Box(modifier = Modifier.weight(1f).padding(16.dp))
+                            {
+                                ImageCard(
+                                    painter = drinks[i + 3].image,
+                                    contentDescriptor = drinks[i + 3].description,
+                                    title = drinks[i + 3].title,
+                                    navController = navController
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier.weight(1f).padding(16.dp)
+                            )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                            {
+                            }
                         }
                     }
                 }
