@@ -1,9 +1,5 @@
 package com.example.drinki
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-
 //Klasa do trzymania informacji o drinkach
 data class DrinkInfo(
     var imageId : Int = R.drawable.bluelagoon,
@@ -13,7 +9,7 @@ data class DrinkInfo(
     var time : Int
 )
 
-//@Composable
+//Zwraca listę drinków
 fun getDrinkList(): List<DrinkInfo>
 {
     val text1 : String =    "• 50 ml wódka,\n" +

@@ -1,6 +1,5 @@
 package com.example.drinki
 
-import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -61,10 +60,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//Wyświetla skrollowalną listę
+//Wyświetla skrollowalną listę drinków
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentList(drinks : List<DrinkInfo>, navController : NavController,viewModel: DrinkViewModel)
+fun ContentList(navController : NavController,viewModel: DrinkViewModel)
 {
     Scaffold(topBar = {
         TopAppBar(
@@ -80,11 +79,11 @@ fun ContentList(drinks : List<DrinkInfo>, navController : NavController,viewMode
         )
     })
     { innePadding ->
-        LazyColumn(modifier = Modifier.padding(innePadding))    //Układ kolumnowy, który pozwala na przewijanie jeśli się nie zmieszczą na ekranie
+        LazyColumn(modifier = Modifier.padding(innePadding))
         {
             for(i in viewModel.drinkInfoList.indices step 2) //Iterowanie co 2 indeksy
             {
-                item()  //Element leniwej kolumny
+                item()
                 {
                     Row()   //Rząd aby uporządkować zawartość
                     {
@@ -119,7 +118,7 @@ fun ContentList(drinks : List<DrinkInfo>, navController : NavController,viewMode
 //Wyświetlanie głównego ekranu na tabletach
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TabletContentList(drinks : List<DrinkInfo>, navController : NavController,viewModel: DrinkViewModel)
+fun TabletContentList(navController : NavController,viewModel: DrinkViewModel)
 {
     Scaffold(topBar = {
         TopAppBar(
@@ -135,7 +134,7 @@ fun TabletContentList(drinks : List<DrinkInfo>, navController : NavController,vi
         )
     })
     { innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding))    //Układ kolumnowy, który pozwala na przewijanie jeśli się nie zmieszczą na ekranie
+        LazyColumn(modifier = Modifier.padding(innerPadding))
         {
             for (i in viewModel.drinkInfoList.indices step 4) //Iterowanie co 4 indeksy
             {
@@ -145,14 +144,14 @@ fun TabletContentList(drinks : List<DrinkInfo>, navController : NavController,vi
                     {
                         Box(
                             modifier = Modifier.weight(1f).padding(16.dp)
-                        ) //Kontener do przechowania przycisków
+                        )
                         {
                             ImageCard(
                                 drink = viewModel.drinkInfoList[i],
                                 navController = navController
                             )
                         }
-                        if (i + 1 < viewModel.drinkInfoList.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
+                        if (i + 1 < viewModel.drinkInfoList.size)    //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
                         {
                             Box(modifier = Modifier.weight(1f).padding(16.dp))
                             {
@@ -168,7 +167,7 @@ fun TabletContentList(drinks : List<DrinkInfo>, navController : NavController,vi
                             {
                             }
                         }
-                        if (i + 2 < viewModel.drinkInfoList.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
+                        if (i + 2 < viewModel.drinkInfoList.size)
                         {
                             Box(modifier = Modifier.weight(1f).padding(16.dp))
                             {
@@ -184,7 +183,7 @@ fun TabletContentList(drinks : List<DrinkInfo>, navController : NavController,vi
                             {
                             }
                         }
-                        if (i + 3 < viewModel.drinkInfoList.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
+                        if (i + 3 < viewModel.drinkInfoList.size)  //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
                         {
                             Box(modifier = Modifier.weight(1f).padding(16.dp))
                             {
@@ -208,35 +207,30 @@ fun TabletContentList(drinks : List<DrinkInfo>, navController : NavController,vi
 }
 
 
-//Wyświetlana karta drinku
+//Wyświetlana karty drinku
 @Composable
 fun ImageCard(
-    /*painter: Painter,
-    contentDescriptor: String,
-    preparing: String,
-    title: String,
-    imageId : Int = 0,*/
     drink: DrinkInfo,
     modifier: Modifier = Modifier,
     navController : NavController
 )
 {
     Card(
-        modifier = modifier.fillMaxWidth(),                 //Rozciągnięniecie na maksymalną dostępną szerogokść
-        shape = RoundedCornerShape(15.dp),                  //Zaokrąglenie rogów
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(15.dp),
         elevation = cardElevation(defaultElevation = 5.dp)  //Cieniowanie (daje efekt jakby element był przed tłem
     )
     {
         Box(
-            modifier = Modifier.height(200.dp).fillMaxWidth().background(Color.Yellow),  //Zapewnienie pełnej szerokości
-            contentAlignment = Alignment.Center)                                        //Wyśrodkowanie
+            modifier = Modifier.height(200.dp).fillMaxWidth().background(Color.Yellow),
+            contentAlignment = Alignment.Center)
         {
             Image(
                 modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = drink.imageId),                          //Obraz
-                contentDescription = drink.title,     //Opis
-                contentScale = ContentScale.FillBounds,     //Wypełnienie kontenera
-                alignment = Alignment.Center                //Wyśrodkowanie obrazu
+                painter = painterResource(id = drink.imageId),
+                contentDescription = drink.title,
+                contentScale = ContentScale.FillBounds,
+                alignment = Alignment.Center
                 )
             Box(                                                                        //Kontener służący do nałożenia gradientu
                 modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(    //Brush pozwala wypełniać na różne sposoby ( w tym przypadku gradient)
@@ -244,20 +238,21 @@ fun ImageCard(
                     startY = 300f                                                       //Początek pojawiania się gradientu
                 ))
             )
-            Box(                                                                        //Kontener trzymający napis
-                modifier = Modifier.fillMaxSize().padding(12.dp),                       //Maksymalne wypełnienie i margines od wewnątrz (padding tak jak w css)
-                contentAlignment = Alignment.BottomCenter                               //Wyśrodkowanie na dole
+            Box(
+                modifier = Modifier.fillMaxSize().padding(12.dp),
+                contentAlignment = Alignment.BottomCenter
                 )
             {
-                Text(drink.title, style = TextStyle(color = Color.White, fontSize = 16.sp))   //Text (czcionkę podaje się w "sp")
+                Text(drink.title, style = TextStyle(color = Color.White, fontSize = 16.sp))
             }
             Button(
-                modifier = Modifier.fillMaxSize(),                                                  // Wypełnienie całej dostępnej przestrzeni
-                shape = RoundedCornerShape(15.dp),                                                  // Zaokrąglenie przycisku na rogach (tak jak box
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(15.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent),           // Kolor tła przycisku
-                onClick =                                                                           // Kod, który wykona się po naciśnięciu przycisku
+                    containerColor = Color.Transparent),
+                onClick =
                     {
+                        //Przejście do innej aktywności (informacji o drinku)
                         navController.navigate(Screen.DetailScreen.withArgs(drink.title,drink.description,drink.howToPrepare,drink.time.toString(),drink.imageId.toString()))   //Przejście do nowej sceny
                     }
             )

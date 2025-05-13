@@ -12,13 +12,13 @@ import kotlinx.coroutines.flow.Flow
 interface DrinkDao
 {
     @Query("SELECT * FROM drink")
-    fun getAllDrinks(): Flow<List<Drink>> // get all drinks
+    fun getAllDrinks(): Flow<List<Drink>> //pobranie wszystkich drinków z bazy
     @Insert
-    suspend fun insertDrink(drink: Drink) //add new drink
+    suspend fun insertDrink(drink: Drink) //dodanie nowego drinku
     @Update
-    suspend fun updateDrink(drink: Drink) //update drink
+    suspend fun updateDrink(drink: Drink) //aktualizacja drinku
     @Delete
-    suspend fun deleteDrink(drink: Drink) //delete drink
+    suspend fun deleteDrink(drink: Drink) //usunięcie drinku
     @Query("DELETE FROM drink")
-    suspend fun deleteAll()
+    suspend fun deleteAll()               //wyczyszczenie bazy danych
 }

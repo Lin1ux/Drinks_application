@@ -1,6 +1,5 @@
 package com.example.drinki
 
-import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -16,48 +15,34 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
-
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.lifecycleScope
-import com.example.drinki.database.AppDatabase
 import com.example.drinki.database.DrinkViewModel
 import com.example.drinki.ui.theme.DrinkiTheme
 
 
+//Komponent do obsługi nawigacje po aplikacji
 @Composable
 fun Navigation(viewModel: DrinkViewModel)
 {
     val navController = rememberNavController()
-    //val drinks = viewModel.drinks.collectAsState()
     viewModel.initViewModel()
 
-
-
-    //val drinks by viewModel.drinks.collectAsState()
-    //drinkViewModel.initViewModel()
-
-    //val drinks by viewModel.users.observeAsState(emptyList())
     NavHost(navController = navController, startDestination = Screen.MainScreen.route)
     {
+        //Główny ekran (lista drinków)
         composable(route = Screen.MainScreen.route)
         {
             DrinkiTheme {
                 MainScreen(navController = navController,viewModel)
             }
         }
+        //Szczegóły drinka
         composable (
-            route = Screen.DetailScreen.route + "/{name}/{description}/{preparing}/{duration}/{imageId}",
+            route = Screen.DetailScreen.route + "/{name}/{description}/{preparing}/{duration}/{imageId}",   //ścieżka i argumenty przekazywane
             arguments = listOf(
                 navArgument("name")
                 {
@@ -76,6 +61,7 @@ fun Navigation(viewModel: DrinkViewModel)
             )
         )
         {   entry ->
+            //Ekran szczegółów z przekazanymi argumentami podanymi z ścieżki
             DrinkiTheme {
                 SelectDetailScreen(
                     navController = navController,
@@ -89,7 +75,7 @@ fun Navigation(viewModel: DrinkViewModel)
         }
     }
 }
-
+//Wyświetla odpowiedni ekran listy drinków zależnie od ułożenia urządzenia
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun MainScreen(navController : NavController,viewModel: DrinkViewModel)
@@ -97,20 +83,22 @@ fun MainScreen(navController : NavController,viewModel: DrinkViewModel)
     val context = LocalContext.current
     val activity = context as ComponentActivity
     val windowSizeClass = calculateWindowSizeClass(activity)    //Pobranie klasy ekranu
-    //
+
+    //Sprawdzenie wielkości ekranu i wyświetlenie odpowiedniej listy
     when (windowSizeClass.widthSizeClass)   //when działa podobnie do switcha
     {
         //Kompaktowy rozmiar
         WindowWidthSizeClass.Compact -> {
-            ContentList(getDrinkList(),navController,viewModel) //Wyświetlanie listy
+            ContentList(navController,viewModel) //Wyświetlanie listy
         }
         //Rozszerzony rozmiar
         WindowWidthSizeClass.Medium, WindowWidthSizeClass.Expanded -> {
-            TabletContentList(getDrinkList(),navController,viewModel)
+            TabletContentList(navController,viewModel)
         }
     }
 }
 
+//Wyświetla odpowiedni ekran szczegółów zależnie od ułożenia urządzenia
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SelectDetailScreen(navController : NavController,title: String?,description: String?,preparing: String?,duration: String?,imageId: String?)
@@ -118,6 +106,7 @@ fun SelectDetailScreen(navController : NavController,title: String?,description:
     val viewModel: TimerViewModel = viewModel()         //View Model timera, który trzyma wartości w przypadku zmiany stanu
     val lifecycleOwner = LocalLifecycleOwner.current    //Lifecycle monitoruje zachowanie aplikacji
 
+    //Dodanie obserwatora co pozwala na dzia
     DisposableEffect(lifecycleOwner) {                          //Obiekt do zarządzania obserwatorami
         lifecycleOwner.lifecycle.addObserver(viewModel)         //Dodanie obserwatora dla view Modela, dzięki temu może wywoływać funkcję (np. @OnLifecycleEvent...) na podstawie zdarzeń
         onDispose {                                             //Wywoływane podczas zamykania aplikacji
@@ -128,7 +117,8 @@ fun SelectDetailScreen(navController : NavController,title: String?,description:
     val context = LocalContext.current
     val activity = context as ComponentActivity
     val windowSizeClass = calculateWindowSizeClass(activity)    //Pobranie klasy ekranu
-    //
+
+    //Obsługa gestu ruchu palcem w celu cofnięcia się do poprzedniego ekranu
     var back = false
     Box(modifier = Modifier
         .fillMaxSize()
@@ -142,6 +132,7 @@ fun SelectDetailScreen(navController : NavController,title: String?,description:
             }
         })
     {
+        //Sprawdzenie wielkości ekranu i wyświetlenie odpowiedniego układu
         when (windowSizeClass.widthSizeClass)   //when działa podobnie do switcha
         {
             //Kompaktowy rozmiar

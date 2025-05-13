@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,17 +44,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-
 import androidx.compose.ui.text.style.TextAlign
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -280,12 +275,13 @@ fun DetailScreenTablet(viewModel: TimerViewModel,title: String?,description: Str
     }
 }
 
+//Komponent czasomierza
 @Composable
 fun Timer(viewModel: TimerViewModel,duration : Int,tablet : Boolean)
 {
     // Pobieranie wartości bezpośrednio z ViewModel
     viewModel.setNewDuration(duration)
-    val time = viewModel.time
+    //val time = viewModel.time
     val isRunning = viewModel.isRunning
 
     //Odliczanie czasu w osobnym wątku
@@ -388,7 +384,7 @@ fun Timer(viewModel: TimerViewModel,duration : Int,tablet : Boolean)
             contentAlignment = Alignment.Center
         )
         {
-            Text("$time", style = TextStyle(fontSize = 64.sp))
+            Text("${viewModel.time}", style = TextStyle(fontSize = 64.sp))
         }
     }
 }
@@ -397,9 +393,9 @@ fun Timer(viewModel: TimerViewModel,duration : Int,tablet : Boolean)
 class TimerViewModel : ViewModel(), LifecycleObserver
 {
     //mutableStateOf zapisuje wartości zmiennych podczas zmiany stanu
-    var duration by mutableStateOf(5)           //Czas trwania timera
-    var time by mutableStateOf(5)               //Pozostały czas
-    var isRunning by mutableStateOf(false)      //Czy timer działa
+    var duration by mutableIntStateOf(5)            //Czas trwania timera
+    var time by mutableIntStateOf(5)                //Pozostały czas
+    var isRunning by mutableStateOf(false)          //Czy timer działa
 
     var canCount = false
 
@@ -458,6 +454,7 @@ class TimerViewModel : ViewModel(), LifecycleObserver
     }
 }
 
+//Ekran do wprowadzania numeru telefonu
 @Composable
 fun PhoneNumberDialog(
     showDialog: Boolean,
@@ -466,7 +463,8 @@ fun PhoneNumberDialog(
 ) {
     var phoneNumber by remember { mutableStateOf("") }
 
-    if (showDialog) {
+    if (showDialog)
+    {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { Text("Podaj numer telefonu") },
@@ -496,8 +494,8 @@ fun PhoneNumberDialog(
             dismissButton = {
                 TextButton(onClick = onDismiss,
                     colors = ButtonDefaults.textButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary, // Kolor tła
-                        contentColor = Color.White  // Kolor tekstu
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
                     )) {
                     Text("Anuluj",color = Color.White)
                 }
