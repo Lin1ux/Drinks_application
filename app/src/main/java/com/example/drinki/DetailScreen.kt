@@ -396,6 +396,7 @@ class TimerViewModel : ViewModel(), LifecycleObserver
     var duration by mutableIntStateOf(5)            //Czas trwania timera
     var time by mutableIntStateOf(5)                //Pozostały czas
     var isRunning by mutableStateOf(false)          //Czy timer działa
+    var canSetTime : Boolean = true                 //Czy time może zostać zmieniony
 
     var canCount = false
 
@@ -415,7 +416,11 @@ class TimerViewModel : ViewModel(), LifecycleObserver
     fun setNewDuration(value : Int)
     {
         duration = value
-        time = duration
+        if(canSetTime)
+        {
+            time = duration
+            canSetTime = false
+        }
     }
     //Zmiana stanu timera
     fun switchTimer()
@@ -433,6 +438,7 @@ class TimerViewModel : ViewModel(), LifecycleObserver
     {
         time = duration
         isRunning = false
+        canSetTime = true
     }
     //Aktualizacja timera
     fun updateTime()
