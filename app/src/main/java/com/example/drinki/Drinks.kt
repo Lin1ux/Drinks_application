@@ -5,14 +5,16 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 
 //Klasa do trzymania informacji o drinkach
-data class Drink(
-    var image : Painter,
+data class DrinkInfo(
+    var imageId : Int = R.drawable.bluelagoon,
     var description : String,
-    var title : String
+    var howToPrepare : String,
+    var title : String,
+    var time : Int
 )
 
-@Composable
-fun getDrinkList(): List<Drink>
+//@Composable
+fun getDrinkList(): List<DrinkInfo>
 {
     val text1 : String =    "• 50 ml wódka,\n" +
                             "• 20 ml Blue Curacao,\n" +
@@ -51,7 +53,7 @@ fun getDrinkList(): List<Drink>
                             "• 2 łyżeczki cukru trzcinowego;\n" +
                             "• Kilka listków mięty;\n" +
                             "• 25 ml wody gazowanej;\n" +
-                            "• Kruszony lód.\n"
+                            "• Kruszony lód.\n" +
                             "• Pół limonki + ćwiartka do dekoracji;\n"
 
     val text8 : String =    "• 120 ml soku ananasowego\n" +
@@ -69,14 +71,15 @@ fun getDrinkList(): List<Drink>
 
 
     return listOf(
-        Drink(painterResource(id = R.drawable.bluelagoon), text1, "Blue Lagoon"),
-        Drink(painterResource(id = R.drawable.cubalibre), text2, "Cuba Libre"),
-        Drink(painterResource(id = R.drawable.eldiablo), text3, "El Diablo"),
-        Drink(painterResource(id = R.drawable.espressomartini), text4, "Espresso Martini"),
-        Drink(painterResource(id = R.drawable.godfather), text5, "GodFather"),
-        Drink(painterResource(id = R.drawable.kamikaze), text6, "Kamikaze"),
-        Drink(painterResource(id = R.drawable.mojito), text7, "Mojito"),
-        Drink(painterResource(id = R.drawable.pinacolada), text8, "Pina Colada"),
-        Drink(painterResource(id = R.drawable.sexonbeach), text9, "Sex On Beach"),
+        DrinkInfo(R.drawable.bluelagoon, text1,"Wstrząsnąć w shakerze z lodem", "Blue Lagoon",15),
+        DrinkInfo(R.drawable.cubalibre, text2,"Delikatnie zamieszać w szklance", "Cuba Libre",10),
+        DrinkInfo(R.drawable.eldiablo, text3,"Zamieszać w szklance z lodem", "El Diablo",10),
+        DrinkInfo(R.drawable.espressomartini, text4,"Mocno wstrząsnąć w shakerze z lodem", "Espresso Martini",20),
+        DrinkInfo(R.drawable.godfather, text5,"Zamieszać w szklance", "GodFather",10),
+        DrinkInfo(R.drawable.kamikaze, text6, "Wstrząsnąć w shakerze z lodem","Kamikaze",15),
+        DrinkInfo(R.drawable.mojito, text7,"Delikatnie zamieszać łyżką barmańską w szklance", "Mojito",10),
+        DrinkInfo(R.drawable.pinacolada, text8,"Wstrząsnąć w shakerze z lodem", "Pina Colada",20),
+        DrinkInfo(R.drawable.sexonbeach, text9,"Zamieszać delikatnie w szklance", "Sex On Beach",10),
     )
+
 }
