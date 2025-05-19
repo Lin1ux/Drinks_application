@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Input
+import androidx.compose.material.icons.filled.Input
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -79,7 +81,7 @@ fun DetailScreen(navController: NavController,viewModel: TimerViewModel,drinkVie
         drawerState = drawerState,
         gesturesEnabled = false,
         drawerContent = {
-            NavigationMenu(navController,{ scope.launch { drawerState.close() } })
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } },false)
         })
     {
         val isFavorite by drinkViewModel.isFavoriteByUid(uid ?: 0).collectAsState(initial = false)
@@ -177,12 +179,12 @@ fun DetailScreen(navController: NavController,viewModel: TimerViewModel,drinkVie
                     //timer
                     item()
                     {
-                        Timer(viewModel = viewModel, duration, tablet = false)
+                        Timer(viewModel = viewModel, duration)
                     }
                     //Animacja
                     item()
                     {
-                        TimerAnimation()
+                        TimerAnimation(viewModel.isRunning)
                     }
                 }
             }
@@ -203,7 +205,7 @@ fun DetailScreenTablet(navController: NavController,viewModel: TimerViewModel,dr
         drawerState = drawerState,
         gesturesEnabled = false,
         drawerContent = {
-            NavigationMenu(navController)
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } },true)
         })
     {
         Scaffold(
@@ -300,8 +302,8 @@ fun DetailScreenTablet(navController: NavController,viewModel: TimerViewModel,dr
                                 Image(
                                     modifier = Modifier.fillMaxSize(),
                                     painter = painterResource(id = imageId),                          //Obraz
-                                    contentDescription = "image",     //Opis
-                                    contentScale = ContentScale.Crop,          //Wypełnienie kontenera
+                                    contentDescription = "image",               //Opis
+                                    contentScale = ContentScale.Crop,           //Wypełnienie kontenera
                                     alignment = Alignment.Center                //Wyśrodkowanie obrazu
                                 )
                             }
@@ -310,7 +312,12 @@ fun DetailScreenTablet(navController: NavController,viewModel: TimerViewModel,dr
                     //timer
                     item()
                     {
-                        Timer(viewModel = viewModel, duration, tablet = false)
+                        Timer(viewModel = viewModel, duration)
+                    }
+                    //Animacja
+                    item()
+                    {
+                        TimerAnimation(viewModel.isRunning)
                     }
                 }
             }
@@ -320,12 +327,13 @@ fun DetailScreenTablet(navController: NavController,viewModel: TimerViewModel,dr
 
 //Komponent czasomierza
 @Composable
-fun Timer(viewModel: TimerViewModel,duration : Int,tablet : Boolean)
+fun Timer(viewModel: TimerViewModel,duration : Int)
 {
     // Pobieranie wartości bezpośrednio z ViewModel
     viewModel.setNewDuration(duration)
     //val time = viewModel.time
     val isRunning = viewModel.isRunning
+    var showDialog by remember { mutableStateOf(false) }
 
     //Odliczanie czasu w osobnym wątku
     LaunchedEffect(isRunning)
@@ -340,87 +348,72 @@ fun Timer(viewModel: TimerViewModel,duration : Int,tablet : Boolean)
     {
         Row(modifier = Modifier.fillMaxWidth())
         {
-            if (!tablet)
-            {
-                Spacer(modifier = Modifier.weight(0.25f))
-                Button(
-                    modifier = Modifier.weight(0.25f).padding(5.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    colors = ButtonDefaults.buttonColors(),
-                    onClick = {
-                        viewModel.switchTimer()
-                    }
-                )
-                {
-                    //Text(if(isRunning) {"Stop"} else {"Start"}, style = TextStyle(color = Color.White, fontSize = 32.sp))
-                    if(isRunning)
-                    {
-                        Icon(
-                            modifier = Modifier.height(30.dp),
-                            imageVector = Icons.Default.Pause,
-                            contentDescription = "Stop",
-                            tint = Color.White
-                        )
-                    }
-                    else
-                    {
-                        Icon(
-                            modifier = Modifier.height(30.dp),
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Start",
-                            tint = Color.White
-                        )
-                    }
+
+            Spacer(modifier = Modifier.weight(0.2f))
+            Button(
+                modifier = Modifier.weight(0.2f).padding(5.dp),
+                shape = RoundedCornerShape(15.dp),
+                colors = ButtonDefaults.buttonColors(),
+                onClick = {
+                    viewModel.switchTimer()
                 }
-                Button(
-                    modifier = Modifier.weight(0.25f).padding(5.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    colors = ButtonDefaults.buttonColors(),
-                    onClick = {
-                        viewModel.stopTimer()
-                        viewModel.resetTimer()
-                    }
-                )
+            )
+            {
+                if(isRunning)
                 {
                     Icon(
                         modifier = Modifier.height(30.dp),
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Restart",
+                        imageVector = Icons.Default.Pause,
+                        contentDescription = "Stop",
                         tint = Color.White
-
                     )
                 }
-                Spacer(modifier = Modifier.weight(0.25f))
+                else
+                {
+                    Icon(
+                        modifier = Modifier.height(30.dp),
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start",
+                        tint = Color.White
+                    )
+                }
             }
-            else
+            Button(
+                modifier = Modifier.weight(0.2f).padding(5.dp),
+                shape = RoundedCornerShape(15.dp),
+                colors = ButtonDefaults.buttonColors(),
+                onClick = {
+                    viewModel.stopTimer()
+                    viewModel.resetTimer()
+                }
+            )
             {
-                Spacer(modifier = Modifier.weight(0.25f))
-                Button(
-                    modifier = Modifier.weight(0.25f),
-                    shape = RoundedCornerShape(15.dp),
-                    colors = ButtonDefaults.buttonColors(),
-                    onClick = {
-                        viewModel.switchTimer()
-                    }
+                Icon(
+                    modifier = Modifier.height(30.dp),
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Restart",
+                    tint = Color.White
+
                 )
-                {
-                    Text(
-                        if(isRunning) {"Stop"} else {"Start"},                    //Można dawać ifa do argumentu
-                        style = TextStyle(color = Color.White, fontSize = 32.sp))
-                }
-                Button(
-                    modifier = Modifier.weight(0.25f),
-                    shape = RoundedCornerShape(15.dp),
-                    colors = ButtonDefaults.buttonColors(),
-                    onClick = {
-                        viewModel.switchTimer()
-                    }
-                )
-                {
-                    Text("Restart", style = TextStyle(color = Color.White, fontSize = 32.sp))
-                }
-                Spacer(modifier = Modifier.weight(0.25f))
             }
+            Button(
+                modifier = Modifier.weight(0.2f).padding(5.dp),
+                shape = RoundedCornerShape(15.dp),
+                colors = ButtonDefaults.buttonColors(),
+                onClick = {
+                    showDialog = true
+                }
+            )
+            {
+                Icon(
+                    modifier = Modifier.height(30.dp),
+                    imageVector = Icons.Filled.Input,
+                    contentDescription = "Wprowadzenie danych",
+                    tint = Color.White
+
+                )
+            }
+            Spacer(modifier = Modifier.weight(0.2f))
         }
         Box(
             modifier = Modifier.fillMaxWidth().padding(15.dp),
@@ -430,77 +423,13 @@ fun Timer(viewModel: TimerViewModel,duration : Int,tablet : Boolean)
             Text("${viewModel.time}", style = TextStyle(fontSize = 64.sp))
         }
     }
-}
-
-//View Model, który trzyma wartości między stanami
-class TimerViewModel : ViewModel(), LifecycleObserver
-{
-    //mutableStateOf zapisuje wartości zmiennych podczas zmiany stanu
-    var duration by mutableIntStateOf(5)            //Czas trwania timera
-    var time by mutableIntStateOf(5)                //Pozostały czas
-    var isRunning by mutableStateOf(false)          //Czy timer działa
-    var canSetTime : Boolean = true                 //Czy time może zostać zmieniony
-
-    var canCount = false
-
-    //Zatrzymanie timera kiedy użytkownik minimalizuje aplikajce
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE) //Wywołanie kiedy użytkownik ma zminimalizowaną aplikację
-    fun unactive()
-    {
-        canCount = false
-    }
-
-    //Włączenie timera kiedy użytkownik widzi aplikacje
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME) //Wywołanie kiedy użytkownik ma wyświetloną aplikacje
-    fun active()
-    {
-        canCount = true
-    }
-    fun setNewDuration(value : Int)
-    {
-        duration = value
-        if(canSetTime)
-        {
-            time = duration
-            canSetTime = false
-        }
-    }
-    //Zmiana stanu timera
-    fun switchTimer()
-    {
-        isRunning = !isRunning
-    }
-    //Zatrzymanie timer
-    fun stopTimer()
-    {
-        isRunning = false
-    }
-
-    //Resetowanie wartości timera
-    fun resetTimer()
-    {
-        time = duration
-        isRunning = false
-        canSetTime = true
-    }
-    //Aktualizacja timera
-    fun updateTime()
-    {
-        //Jeśli aplikacja nie jest wyświetlana nie pozwala liczyć
-        if(!canCount)
-        {
-            return
-        }
-        //zmniejszenie wartości licznika
-        if (isRunning && time > 0)
-        {
-            time--
-        }
-        else if (time <= 0)
-        {
-            resetTimer()
-        }
-    }
+    TimerDialog(
+                startValue = viewModel.duration,
+                showDialog = showDialog,
+                onDismiss = { showDialog = false },
+                onAccept = { value ->
+                viewModel.ResetAndSetDuration(value)
+        })
 }
 
 //Ekran do wprowadzania numeru telefonu
@@ -536,6 +465,56 @@ fun PhoneNumberDialog(
                         onDismiss()
                     },
                     enabled = phoneNumber.isNotBlank(),
+                ) {
+                    Text("OK",color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    )) {
+                    Text("Anuluj",color = Color.White)
+                }
+            }
+        )
+    }
+}
+//Ekran do zmieniania wartości timera
+@Composable
+fun TimerDialog(
+    startValue: Int,
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onAccept: (Int) -> Unit
+) {
+    var time by remember { mutableStateOf(startValue.toString()) }
+
+    if (showDialog)
+    {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Ustaw czas") },
+            text = {
+                OutlinedTextField(
+                    value = time,
+                    onValueChange = { time = it },
+                    label = { Text("Czas (s)") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onAccept(time.toIntOrNull()?: startValue)
+                        onDismiss()
+                    },
+                    enabled = true,
                 ) {
                     Text("OK",color = Color.White)
                 }

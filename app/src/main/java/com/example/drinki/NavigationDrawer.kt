@@ -106,7 +106,8 @@ fun AppBar(navController : NavController,
 @Composable
 fun NavigationMenu(
     navController: NavController,
-    backAction: () -> Unit = {}
+    backAction: () -> Unit = {},
+    tablet : Boolean = false
 )
 {
 
@@ -115,7 +116,7 @@ fun NavigationMenu(
         Column(modifier = Modifier.weight(0.7f).fillMaxSize())
         {
             Spacer(modifier = Modifier.weight(0.1f))
-            Column(modifier = Modifier.weight(0.2f).clip(RoundedCornerShape(5.dp)).background(MaterialTheme.colorScheme.background))
+            Column(modifier = Modifier.weight(if(tablet) 0.4f else 0.2f).clip(RoundedCornerShape(5.dp)).background(MaterialTheme.colorScheme.background))
             {
                 Box(modifier = Modifier.fillMaxWidth().weight(0.3f).background(MaterialTheme.colorScheme.background),
                     contentAlignment = Alignment.Center)
@@ -153,7 +154,7 @@ fun NavigationMenu(
                 }
 
             }
-            Spacer(modifier = Modifier.weight(0.7f).clickable{backAction()})
+            Spacer(modifier = Modifier.weight(if(tablet) 0.5f else 0.7f).clickable{backAction()})
         }
         Spacer(modifier = Modifier.weight(0.3f))
     }

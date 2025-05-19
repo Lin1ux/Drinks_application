@@ -87,7 +87,7 @@ fun ContentList(navController : NavController,viewModel: DrinkViewModel,takeAll 
         drawerState = drawerState,
         gesturesEnabled = false,
         drawerContent = {
-            NavigationMenu(navController,{ scope.launch { drawerState.close() } })
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } },false)
         })
     {
         Scaffold(topBar = {
@@ -106,42 +106,11 @@ fun ContentList(navController : NavController,viewModel: DrinkViewModel,takeAll 
                                 )
                             }
                         }
-                        // Uzupełnij brakujący element
                         if (pair.size == 1) {
                             Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
-                /*for(i in drinkInfoList.indices step 2) //Iterowanie co 2 indeksy
-                {
-                    item()
-                    {
-                        Row()   //Rząd aby uporządkować zawartość
-                        {
-                            Box(modifier = Modifier.weight(1f).padding(16.dp)) //Kontener do przechowania przycisków
-                            {
-                                ImageCard(
-                                    drink = drinkInfoList[i],
-                                    navController = navController)
-                            }
-                            if (i+1<drinkInfoList.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
-                            {
-                                Box(modifier = Modifier.weight(1f).padding(16.dp))
-                                {
-                                    ImageCard(
-                                        drink = drinkInfoList[i + 1],
-                                        navController = navController)
-                                }
-                            }
-                            else
-                            {
-                                Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
-                                {
-                                }
-                            }
-                        }
-                    }
-                }*/
             }
         }
     }
@@ -152,15 +121,19 @@ fun ContentList(navController : NavController,viewModel: DrinkViewModel,takeAll 
 @Composable
 fun TabletContentList(navController : NavController,viewModel: DrinkViewModel,takeAll : Boolean)
 {
-    viewModel.loadDrinks(false)
+    val drinkInfoList = viewModel.drinksState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(takeAll) {
+        viewModel.loadDrinks(takeAll)
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = false,
         drawerContent = {
-            NavigationMenu(navController,{ scope.launch { drawerState.close() } })
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } },true)
         })
     {
         Scaffold(topBar = {
@@ -169,68 +142,18 @@ fun TabletContentList(navController : NavController,viewModel: DrinkViewModel,ta
         { innerPadding ->
             LazyColumn(modifier = Modifier.padding(innerPadding))
             {
-                for (i in viewModel.drinkInfoList.indices step 4) //Iterowanie co 4 indeksy
-                {
-                    item()  //Element leniwej kolumny
-                    {
-                        Row()   //Rząd aby uporządkować zawartość
-                        {
-                            Box(
-                                modifier = Modifier.weight(1f).padding(16.dp)
-                            )
-                            {
+                itemsIndexed(drinkInfoList.value.chunked(4)) { index, pair ->
+                    Row {
+                        pair.forEach { drink ->
+                            Box(modifier = Modifier.weight(1f).padding(16.dp)) {
                                 ImageCard(
-                                    drink = viewModel.drinkInfoList[i],
+                                    drink = drink,
                                     navController = navController
                                 )
                             }
-                            if (i + 1 < viewModel.drinkInfoList.size)    //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
-                            {
-                                Box(modifier = Modifier.weight(1f).padding(16.dp))
-                                {
-                                    ImageCard(
-                                        drink = viewModel.drinkInfoList[i + 1],
-                                        navController = navController
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier.weight(1f).padding(16.dp)
-                                )  //Wstawienie pustego pudła aby nie zaburzyć układu
-                                {
-                                }
-                            }
-                            if (i + 2 < viewModel.drinkInfoList.size) {
-                                Box(modifier = Modifier.weight(1f).padding(16.dp))
-                                {
-                                    ImageCard(
-                                        drink = viewModel.drinkInfoList[i + 2],
-                                        navController = navController
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier.weight(1f).padding(16.dp)
-                                )  //Wstawienie pustego pudła aby nie zaburzyć układu
-                                {
-                                }
-                            }
-                            if (i + 3 < viewModel.drinkInfoList.size)  //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
-                            {
-                                Box(modifier = Modifier.weight(1f).padding(16.dp))
-                                {
-                                    ImageCard(
-                                        drink = viewModel.drinkInfoList[i + 3],
-                                        navController = navController
-                                    )
-                                }
-                            } else {
-                                Box(
-                                    modifier = Modifier.weight(1f).padding(16.dp)
-                                )  //Wstawienie pustego pudła aby nie zaburzyć układu
-                                {
-                                }
-                            }
+                        }
+                        if (pair.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
