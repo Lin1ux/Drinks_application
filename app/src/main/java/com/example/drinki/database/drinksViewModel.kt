@@ -11,7 +11,14 @@ import com.example.drinki.getDrinkList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import com.example.drinki.DrinkInfo
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.forEach
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlin.collections.map
 
 //View Model do trzymania wartości pobranych z bazy danych
 class DrinkViewModel(
@@ -19,29 +26,52 @@ class DrinkViewModel(
 {
     private val dao = AppDatabase.getInstance(application).drinkDao()
     var drinks = MutableStateFlow<List<Drink>>(emptyList())
-    var drinkList = MutableStateFlow<List<DrinkInfo>>(emptyList())
+    val _drinkList = MutableStateFlow<List<DrinkInfo>>(emptyList())
+
     var drinkInfoList by mutableStateOf<List<DrinkInfo>>(emptyList())
-        private set
+    //State Flow
+    private val _drinksState = MutableStateFlow<List<DrinkInfo>>(emptyList())
+    val drinksState: StateFlow<List<DrinkInfo>> = _drinksState.asStateFlow()
 
-    //na podstawie pobranych danych z bazy danych tworzy listę drinków
-    fun getDrinkInfoList()
-    {
-        val transformedList = mutableListOf<DrinkInfo>()
-
-        //Konwersja Drink z bazy danych do DrinkInfo
-        drinks.value.forEach { drink ->
-            transformedList.add(
-                DrinkInfo(
-                    imageId = R.drawable.bluelagoon, // Możesz zmienić na odpowiednią logikę odczytu z obrazów
-                    description = drink.ingredients,
-                    howToPrepare = drink.description, // Zakładając, że to są składniki
-                    title = drink.name,
-                    time = drink.prepareDuration
-                )
-            )
+    fun isFavoriteByUid(uid: Int): Flow<Boolean> {
+        return dao.getDrink(uid).map { drink ->
+            drink?.isFavorite ?: false
         }
+    }
 
-        drinkList.value = transformedList
+    fun switchFavorite(uid: Int) {
+        viewModelScope.launch {
+            val drink = dao.getDrink(uid).first()
+            drink?.let {
+                dao.updateDrink(it.copy(isFavorite = !it.isFavorite))
+            }
+
+            _drinkList.update { currentList ->
+                currentList.map { drink ->
+                    if (drink.uid == uid) drink.copy(isFavorite = !drink.isFavorite)
+                    else drink
+                }
+            }
+        }
+    }
+
+    fun loadDrinks(allDrinks: Boolean) {
+        viewModelScope.launch {
+            val drinksFlow = if (allDrinks) dao.getAllDrinks() else dao.getFavoriteDrinks()
+            drinksFlow.collect { drinksList ->
+                _drinksState.value = drinksList.map { drink ->
+                    DrinkInfo(
+                        uid = drink.uid,
+                        imageId = drink.imageId,
+                        description = drink.ingredients,
+                        howToPrepare = drink.description,
+                        title = drink.name,
+                        time = drink.prepareDuration,
+                        isFavorite = drink.isFavorite
+                    )
+                }
+            }
+        }
     }
 
     //Pobranie wartości z bazy danych jeśli baza danych jest pusta zapełnia ją wartościami domyślnymi
@@ -61,24 +91,14 @@ class DrinkViewModel(
                             ingredients = drink.description,
                             description = drink.howToPrepare,
                             prepareDuration = drink.time,
-                            imageId = drink.imageId
+                            imageId = drink.imageId,
+                            isFavorite = false
                         )
                     )
                 }
             }
             //Pobranie danych z bazy
-            dao.getAllDrinks().collect { drinksList ->
-                drinks.value = drinksList
-                drinkInfoList = drinksList.map { drink ->
-                    DrinkInfo(
-                        imageId = drink.imageId,
-                        description = drink.ingredients,
-                        howToPrepare = drink.description,
-                        title = drink.name,
-                        time = drink.prepareDuration
-                    )
-                }
-            }
+            loadDrinks(true)
         }
     }
 }

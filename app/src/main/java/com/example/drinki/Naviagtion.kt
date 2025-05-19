@@ -40,9 +40,23 @@ fun Navigation(viewModel: DrinkViewModel)
                 MainScreen(navController = navController,viewModel)
             }
         }
+        composable(route = Screen.MainScreen.route + "/{takeAll}",
+            arguments = listOf(
+                navArgument("takeAll")
+                {
+                    type = NavType.StringType
+                    defaultValue = "true"
+                    nullable = true
+                })
+        )
+        {   entry ->
+            DrinkiTheme {
+                MainScreen(navController = navController,viewModel,entry.arguments?.getString("takeAll") ?: "true")
+            }
+        }
         //Szczegóły drinka
         composable (
-            route = Screen.DetailScreen.route + "/{name}/{description}/{preparing}/{duration}/{imageId}",   //ścieżka i argumenty przekazywane
+            route = Screen.DetailScreen.route + "/{name}/{description}/{preparing}/{duration}/{imageId}/{uid}",   //ścieżka i argumenty przekazywane
             arguments = listOf(
                 navArgument("name")
                 {
@@ -57,6 +71,10 @@ fun Navigation(viewModel: DrinkViewModel)
                 navArgument("imageId") {
                     type = NavType.StringType
                     defaultValue = "0"
+                },
+                navArgument("uid") {
+                    type = NavType.StringType
+                    defaultValue = "0"
                 }
             )
         )
@@ -65,11 +83,13 @@ fun Navigation(viewModel: DrinkViewModel)
             DrinkiTheme {
                 SelectDetailScreen(
                     navController = navController,
+                    DrinkviewModel = viewModel,
                     title = entry.arguments?.getString("name"),
                     description = entry.arguments?.getString("description") ?: "",
                     preparing = entry.arguments?.getString("preparing") ?: "",
                     duration = entry.arguments?.getString("duration") ?: "5",
-                    imageId = entry.arguments?.getString("imageId") ?: "0"
+                    imageId = entry.arguments?.getString("imageId") ?: "0",
+                    uid = entry.arguments?.getString("uid") ?: "0"
                 )
             }
         }
@@ -78,7 +98,7 @@ fun Navigation(viewModel: DrinkViewModel)
 //Wyświetla odpowiedni ekran listy drinków zależnie od ułożenia urządzenia
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun MainScreen(navController : NavController,viewModel: DrinkViewModel)
+fun MainScreen(navController : NavController,viewModel: DrinkViewModel,takeAll : String? = "true")
 {
     val context = LocalContext.current
     val activity = context as ComponentActivity
@@ -89,11 +109,11 @@ fun MainScreen(navController : NavController,viewModel: DrinkViewModel)
     {
         //Kompaktowy rozmiar
         WindowWidthSizeClass.Compact -> {
-            ContentList(navController,viewModel) //Wyświetlanie listy
+            ContentList(navController,viewModel,takeAll?.toBooleanStrictOrNull()?: true) //Wyświetlanie listy
         }
         //Rozszerzony rozmiar
         WindowWidthSizeClass.Medium, WindowWidthSizeClass.Expanded -> {
-            TabletContentList(navController,viewModel)
+            TabletContentList(navController,viewModel,takeAll?.toBooleanStrictOrNull()?: true)
         }
     }
 }
@@ -101,7 +121,7 @@ fun MainScreen(navController : NavController,viewModel: DrinkViewModel)
 //Wyświetla odpowiedni ekran szczegółów zależnie od ułożenia urządzenia
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun SelectDetailScreen(navController : NavController,title: String?,description: String?,preparing: String?,duration: String?,imageId: String?)
+fun SelectDetailScreen(navController : NavController,DrinkviewModel : DrinkViewModel,title: String?,description: String?,preparing: String?,duration: String?,imageId: String?,uid: String?)
 {
     val viewModel: TimerViewModel = viewModel()         //View Model timera, który trzyma wartości w przypadku zmiany stanu
     val lifecycleOwner = LocalLifecycleOwner.current    //Lifecycle monitoruje zachowanie aplikacji
@@ -138,19 +158,25 @@ fun SelectDetailScreen(navController : NavController,title: String?,description:
             //Kompaktowy rozmiar
             WindowWidthSizeClass.Compact -> {   // -> są częścia whena
                 DetailScreen(
+                    navController = navController,
                     viewModel = viewModel,
+                    drinkViewModel = DrinkviewModel,
                     title = title,
                     description = description,
                     preparing = preparing,
+                    uid = uid?.toIntOrNull() ?: 0,
                     duration = duration?.toIntOrNull() ?: 5)
             }
             //Rozszerzony rozmiar
             WindowWidthSizeClass.Medium, WindowWidthSizeClass.Expanded -> {
                 DetailScreenTablet(
+                    navController = navController,
                     viewModel = viewModel,
+                    drinkViewModel = DrinkviewModel,
                     title = title,
                     description = description,
                     preparing = preparing,
+                    uid = uid?.toIntOrNull() ?: 0,
                     duration = duration?.toIntOrNull() ?: 5,
                     imageId = imageId?.toIntOrNull() ?: 0)
             }

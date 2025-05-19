@@ -13,6 +13,12 @@ interface DrinkDao
 {
     @Query("SELECT * FROM drink")
     fun getAllDrinks(): Flow<List<Drink>> //pobranie wszystkich drinków z bazy
+    @Query("SELECT * FROM drink d WHERE uid = :uid LIMIT 1")
+    fun getDrink(uid : Int): Flow<Drink?> //pobranie drinka o podanym id z bazy
+    @Query("UPDATE drink SET isFavorite = :isFavorite WHERE uid = :uid")
+    suspend fun updateFavorite(uid: Int, isFavorite: Boolean)
+    @Query("SELECT * FROM drink WHERE isFavorite = 1")
+    fun getFavoriteDrinks(): Flow<List<Drink>> //pobranie wszystkich drinków z bazy
     @Insert
     suspend fun insertDrink(drink: Drink) //dodanie nowego drinku
     @Update

@@ -1,5 +1,6 @@
 package com.example.drinki
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,13 +40,18 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -55,105 +61,129 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import androidx.navigation.NavController
+import com.example.drinki.database.DrinkViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(viewModel: TimerViewModel,title: String?,description: String?,preparing: String?,duration: Int = 5)
+fun DetailScreen(navController: NavController,viewModel: TimerViewModel,drinkViewModel: DrinkViewModel,title: String?,description: String?,preparing: String?,uid : Int?,duration: Int = 5)
 {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = Color.White
-            ),
-            title = {
-                Box(modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = false,
+        drawerContent = {
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } })
+        })
+    {
+        val isFavorite by drinkViewModel.isFavoriteByUid(uid ?: 0).collectAsState(initial = false)
+
+        Scaffold(
+            topBar = {
+                AppBar( navController = navController,
+                    title =  title?:"",
+                    RightButton = starButton(
+                        true,
+                        isFavorite,
+                        {   Log.d("Akcja",isFavorite.toString())
+                            drinkViewModel.switchFavorite(uid?: 0)
+                        }
+                    ),
+                    onMenuClick =  { scope.launch { drawerState.open()}})
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    modifier = Modifier.navigationBarsPadding(),
+                    onClick = {
+                        showDialog = true
+
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
                 {
-                    Text(
-                        text = title ?: "Brak danych",
-                        style = TextStyle(color = Color.White, fontSize = 48.sp),
-                        textAlign = TextAlign.Center
+                    Icon(
+                        modifier = Modifier.height(30.dp),
+                        imageVector = Icons.Default.Message,
+                        contentDescription = "SMS",
+                        tint = Color.White
                     )
                 }
             }
         )
-
-    },
-        floatingActionButton = {
-            FloatingActionButton(
-                modifier = Modifier.navigationBarsPadding(),
-                onClick = {
-                    showDialog = true
-
-                },
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+        { innerPadding ->
+            Column(modifier = Modifier.padding(innerPadding))
             {
-                Icon(
-                    modifier = Modifier.height(30.dp),
-                    imageVector = Icons.Default.Message,
-                    contentDescription = "SMS",
-                    tint = Color.White
-                )
-            }
-        }
-    )
-    {innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding))
-        {
-            PhoneNumberDialog(
-                showDialog = showDialog,
-                onDismiss = { showDialog = false},
-                onAccept = { number ->
-                    showDialog = false
-                    sendSms(number, description?: "", context)
-                }
-            )
-            //Skrolowane rzeczy
-            LazyColumn()
-            {
-                //Składniki drinka
-                item()
-                {
-                    // Dodanie Text wewnątrz Box
-                    Column(modifier = Modifier.padding(15.dp))
-                    {
-                        Box(
-                            modifier = Modifier.padding(15.dp).fillMaxWidth(),
-                            contentAlignment = Alignment.TopCenter)
-                        {
-                            Text(text = "Składniki",style = TextStyle(fontSize = 32.sp))
-                        }
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.TopStart)
-                        {
-                            Text(text = description ?: "Brak danych",style = TextStyle(fontSize = 20.sp))
-                        }
-                        Box(
-                            modifier = Modifier.padding(15.dp).fillMaxWidth(),
-                            contentAlignment = Alignment.TopCenter)
-                        {
-                            Text(text = "Przygotowanie",style = TextStyle(fontSize = 32.sp))
-                        }
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center)
-                        {
-                            Text(text = preparing ?: "Brak danych",style = TextStyle(fontSize = 20.sp))
-                        }
-
-
+                PhoneNumberDialog(
+                    showDialog = showDialog,
+                    onDismiss = { showDialog = false },
+                    onAccept = { number ->
+                        showDialog = false
+                        sendSms(number, description ?: "", context)
                     }
-                }
-                //timer
-                item()
+                )
+                //Skrolowane rzeczy
+                LazyColumn()
                 {
-                    Timer(viewModel  = viewModel,duration,tablet = false)
+                    //Składniki drinka
+                    item()
+                    {
+                        // Dodanie Text wewnątrz Box
+                        Column(modifier = Modifier.padding(15.dp))
+                        {
+                            Box(
+                                modifier = Modifier.padding(15.dp).fillMaxWidth(),
+                                contentAlignment = Alignment.TopCenter
+                            )
+                            {
+                                Text(text = "Składniki", style = TextStyle(fontSize = 32.sp))
+                            }
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.TopStart
+                            )
+                            {
+                                Text(
+                                    text = description ?: "Brak danych",
+                                    style = TextStyle(fontSize = 20.sp)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier.padding(15.dp).fillMaxWidth(),
+                                contentAlignment = Alignment.TopCenter
+                            )
+                            {
+                                Text(text = "Przygotowanie", style = TextStyle(fontSize = 32.sp))
+                            }
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            )
+                            {
+                                Text(
+                                    text = preparing ?: "Brak danych",
+                                    style = TextStyle(fontSize = 20.sp)
+                                )
+                            }
+
+
+                        }
+                    }
+                    //timer
+                    item()
+                    {
+                        Timer(viewModel = viewModel, duration, tablet = false)
+                    }
+                    //Animacja
+                    item()
+                    {
+                        TimerAnimation()
+                    }
                 }
             }
         }
@@ -162,113 +192,126 @@ fun DetailScreen(viewModel: TimerViewModel,title: String?,description: String?,p
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreenTablet(viewModel: TimerViewModel,title: String?,description: String?,preparing: String?,duration: Int = 5,imageId: Int = 0)
+fun DetailScreenTablet(navController: NavController,viewModel: TimerViewModel,drinkViewModel: DrinkViewModel,title: String?,description: String?,preparing: String?,uid : Int?,duration: Int = 5,imageId: Int = 0)
 {
     val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(topBar = {
-        TopAppBar(
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = Color.White
-            ),
-            title = {
-                Box(modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = false,
+        drawerContent = {
+            NavigationMenu(navController)
+        })
+    {
+        Scaffold(
+            topBar = {
+                AppBar( navController = navController,
+                        title =  title?:"",
+                        RightButton = starButton(
+                            true,
+                            false,
+                            {}
+                        ),
+                        onMenuClick =  { scope.launch { drawerState.open()}})
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    modifier = Modifier.navigationBarsPadding(),
+                    onClick = {
+                        showDialog = true
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
                 {
-                    Text(
-                        text = title ?: "Brak danych",
-                        style = TextStyle(color = Color.White, fontSize = 48.sp),
-                        textAlign = TextAlign.Center
+                    Icon(
+                        modifier = Modifier.height(30.dp),
+                        imageVector = Icons.Default.Message,
+                        contentDescription = "SMS",
+                        tint = Color.White
                     )
                 }
             }
         )
-
-    },
-        floatingActionButton = {
-            FloatingActionButton(
-                modifier = Modifier.navigationBarsPadding(),
-                onClick = {
-                    sendSms("607726641", description?: "", context)
-                },
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+        { innerPadding ->
+            Column(modifier = Modifier.padding(innerPadding))
             {
-                Icon(
-                    modifier = Modifier.height(30.dp),
-                    imageVector = Icons.Default.Message,
-                    contentDescription = "SMS",
-                    tint = Color.White
+                PhoneNumberDialog(
+                    showDialog = showDialog,
+                    onDismiss = { showDialog = false },
+                    onAccept = { number ->
+                        showDialog = false
+                        sendSms(number, description ?: "", context)
+                    }
                 )
-            }
-        }
-    )
-    {innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding))
-        {
-            //Napis z nazwą drinka
-            /*Box(
-
-                modifier =
-                    Modifier.fillMaxWidth().background(Color.LightGray),
-                contentAlignment = Alignment.Center // Wyśrodkowanie tekstu
-            ) {
-                // Dodanie Text wewnątrz Box
-                Text(text = title ?: "Brak danych",style = TextStyle(color = Color.White, fontSize = 48.sp))
-            }*/
-            //Skrolowane rzeczy
-            LazyColumn()
-            {
-                //Składniki drinka
-                item()
+                //Skrolowane rzeczy
+                LazyColumn()
                 {
-                    Row()
+                    //Składniki drinka
+                    item()
                     {
-                        // Dodanie Text wewnątrz Box
-                        Column(modifier = Modifier.weight(0.6f).padding(15.dp))
+                        Row()
                         {
-                            Box(
-                                modifier = Modifier.padding(15.dp).fillMaxWidth(),
-                                contentAlignment = Alignment.TopCenter)
+                            // Dodanie Text wewnątrz Box
+                            Column(modifier = Modifier.weight(0.6f).padding(15.dp))
                             {
-                                Text(text = "Składniki",style = TextStyle(fontSize = 32.sp))
+                                Box(
+                                    modifier = Modifier.padding(15.dp).fillMaxWidth(),
+                                    contentAlignment = Alignment.TopCenter
+                                )
+                                {
+                                    Text(text = "Składniki", style = TextStyle(fontSize = 32.sp))
+                                }
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.TopStart
+                                )
+                                {
+                                    Text(
+                                        text = description ?: "Brak danych",
+                                        style = TextStyle(fontSize = 20.sp)
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier.padding(15.dp).fillMaxWidth(),
+                                    contentAlignment = Alignment.TopCenter
+                                )
+                                {
+                                    Text(
+                                        text = "Przygotowanie",
+                                        style = TextStyle(fontSize = 32.sp)
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                )
+                                {
+                                    Text(
+                                        text = preparing ?: "Brak danych",
+                                        style = TextStyle(fontSize = 20.sp)
+                                    )
+                                }
                             }
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.TopStart)
+                            Box(modifier = Modifier.weight(0.4f).padding(15.dp))
                             {
-                                Text(text = description ?: "Brak danych",style = TextStyle(fontSize = 20.sp))
+                                Image(
+                                    modifier = Modifier.fillMaxSize(),
+                                    painter = painterResource(id = imageId),                          //Obraz
+                                    contentDescription = "image",     //Opis
+                                    contentScale = ContentScale.Crop,          //Wypełnienie kontenera
+                                    alignment = Alignment.Center                //Wyśrodkowanie obrazu
+                                )
                             }
-                            Box(
-                                modifier = Modifier.padding(15.dp).fillMaxWidth(),
-                                contentAlignment = Alignment.TopCenter)
-                            {
-                                Text(text = "Przygotowanie",style = TextStyle(fontSize = 32.sp))
-                            }
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center)
-                            {
-                                Text(text = preparing ?: "Brak danych",style = TextStyle(fontSize = 20.sp))
-                            }
-                        }
-                        Box(modifier = Modifier.weight(0.4f).padding(15.dp))
-                        {
-                            Image(
-                                modifier = Modifier.fillMaxSize(),
-                                painter = painterResource(id = imageId),                          //Obraz
-                                contentDescription = "image",     //Opis
-                                contentScale = ContentScale.Crop ,          //Wypełnienie kontenera
-                                alignment = Alignment.Center                //Wyśrodkowanie obrazu
-                            )
                         }
                     }
-                }
-                //timer
-                item()
-                {
-                    Timer(viewModel  = viewModel,duration,tablet = false)
+                    //timer
+                    item()
+                    {
+                        Timer(viewModel = viewModel, duration, tablet = false)
+                    }
                 }
             }
         }

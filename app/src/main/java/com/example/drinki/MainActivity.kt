@@ -13,18 +13,27 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardElevation
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -40,6 +49,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.drinki.database.DrinkViewModel
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -63,53 +73,75 @@ class MainActivity : ComponentActivity() {
 //Wyświetla skrollowalną listę drinków
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentList(navController : NavController,viewModel: DrinkViewModel)
+fun ContentList(navController : NavController,viewModel: DrinkViewModel,takeAll : Boolean)
 {
-    Scaffold(topBar = {
-        TopAppBar(
-            modifier = Modifier.height(75.dp),
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = Color.White
-            ),
-            title = { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center)
+    val drinkInfoList = viewModel.drinksState.collectAsState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(takeAll) {
+        viewModel.loadDrinks(takeAll)
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = false,
+        drawerContent = {
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } })
+        })
+    {
+        Scaffold(topBar = {
+            AppBar(navController,"Wybierz Drink",starButton(),{ scope.launch { drawerState.open()}})
+        })
+        { innePadding ->
+            LazyColumn(modifier = Modifier.padding(innePadding))
             {
-                Text("Wybierz Drink")}
-            }
-        )
-    })
-    { innePadding ->
-        LazyColumn(modifier = Modifier.padding(innePadding))
-        {
-            for(i in viewModel.drinkInfoList.indices step 2) //Iterowanie co 2 indeksy
-            {
-                item()
-                {
-                    Row()   //Rząd aby uporządkować zawartość
-                    {
-                        Box(modifier = Modifier.weight(1f).padding(16.dp)) //Kontener do przechowania przycisków
-                        {
-                            ImageCard(
-                                drink = viewModel.drinkInfoList[i],
-                                navController = navController)
-                        }
-                        if (i+1<viewModel.drinkInfoList.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
-                        {
-                            Box(modifier = Modifier.weight(1f).padding(16.dp))
-                            {
+                itemsIndexed(drinkInfoList.value.chunked(2)) { index, pair ->
+                    Row {
+                        pair.forEach { drink ->
+                            Box(modifier = Modifier.weight(1f).padding(16.dp)) {
                                 ImageCard(
-                                    drink = viewModel.drinkInfoList[i + 1],
-                                    navController = navController)
+                                    drink = drink,
+                                    navController = navController
+                                )
                             }
                         }
-                        else
-                        {
-                            Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
-                            {
-                            }
+                        // Uzupełnij brakujący element
+                        if (pair.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
+                /*for(i in drinkInfoList.indices step 2) //Iterowanie co 2 indeksy
+                {
+                    item()
+                    {
+                        Row()   //Rząd aby uporządkować zawartość
+                        {
+                            Box(modifier = Modifier.weight(1f).padding(16.dp)) //Kontener do przechowania przycisków
+                            {
+                                ImageCard(
+                                    drink = drinkInfoList[i],
+                                    navController = navController)
+                            }
+                            if (i+1<drinkInfoList.size)    //Jeśli liczba elementów jest nie parzysta nie załaduje obrazu (bo nie ma z czego)
+                            {
+                                Box(modifier = Modifier.weight(1f).padding(16.dp))
+                                {
+                                    ImageCard(
+                                        drink = drinkInfoList[i + 1],
+                                        navController = navController)
+                                }
+                            }
+                            else
+                            {
+                                Box(modifier = Modifier.weight(1f).padding(16.dp))  //Wstawienie pustego pudła aby nie zaburzyć układu
+                                {
+                                }
+                            }
+                        }
+                    }
+                }*/
             }
         }
     }
@@ -118,85 +150,86 @@ fun ContentList(navController : NavController,viewModel: DrinkViewModel)
 //Wyświetlanie głównego ekranu na tabletach
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TabletContentList(navController : NavController,viewModel: DrinkViewModel)
+fun TabletContentList(navController : NavController,viewModel: DrinkViewModel,takeAll : Boolean)
 {
-    Scaffold(topBar = {
-        TopAppBar(
-            modifier = Modifier.height(75.dp),
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = Color.White
-            ),
-            title = { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center)
+    viewModel.loadDrinks(false)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = false,
+        drawerContent = {
+            NavigationMenu(navController,{ scope.launch { drawerState.close() } })
+        })
+    {
+        Scaffold(topBar = {
+            AppBar(navController,"Wybierz Drink",starButton(),{ scope.launch { drawerState.open()}})
+        })
+        { innerPadding ->
+            LazyColumn(modifier = Modifier.padding(innerPadding))
             {
-                Text("Wybierz Drink")}
-            }
-        )
-    })
-    { innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding))
-        {
-            for (i in viewModel.drinkInfoList.indices step 4) //Iterowanie co 4 indeksy
-            {
-                item()  //Element leniwej kolumny
+                for (i in viewModel.drinkInfoList.indices step 4) //Iterowanie co 4 indeksy
                 {
-                    Row()   //Rząd aby uporządkować zawartość
+                    item()  //Element leniwej kolumny
                     {
-                        Box(
-                            modifier = Modifier.weight(1f).padding(16.dp)
-                        )
+                        Row()   //Rząd aby uporządkować zawartość
                         {
-                            ImageCard(
-                                drink = viewModel.drinkInfoList[i],
-                                navController = navController
+                            Box(
+                                modifier = Modifier.weight(1f).padding(16.dp)
                             )
-                        }
-                        if (i + 1 < viewModel.drinkInfoList.size)    //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
-                        {
-                            Box(modifier = Modifier.weight(1f).padding(16.dp))
                             {
                                 ImageCard(
-                                    drink = viewModel.drinkInfoList[i + 1],
+                                    drink = viewModel.drinkInfoList[i],
                                     navController = navController
                                 )
                             }
-                        } else {
-                            Box(
-                                modifier = Modifier.weight(1f).padding(16.dp)
-                            )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                            if (i + 1 < viewModel.drinkInfoList.size)    //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
                             {
+                                Box(modifier = Modifier.weight(1f).padding(16.dp))
+                                {
+                                    ImageCard(
+                                        drink = viewModel.drinkInfoList[i + 1],
+                                        navController = navController
+                                    )
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier.weight(1f).padding(16.dp)
+                                )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                                {
+                                }
                             }
-                        }
-                        if (i + 2 < viewModel.drinkInfoList.size)
-                        {
-                            Box(modifier = Modifier.weight(1f).padding(16.dp))
-                            {
-                                ImageCard(
-                                    drink = viewModel.drinkInfoList[i + 2],
-                                    navController = navController
-                                )
+                            if (i + 2 < viewModel.drinkInfoList.size) {
+                                Box(modifier = Modifier.weight(1f).padding(16.dp))
+                                {
+                                    ImageCard(
+                                        drink = viewModel.drinkInfoList[i + 2],
+                                        navController = navController
+                                    )
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier.weight(1f).padding(16.dp)
+                                )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                                {
+                                }
                             }
-                        } else {
-                            Box(
-                                modifier = Modifier.weight(1f).padding(16.dp)
-                            )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                            if (i + 3 < viewModel.drinkInfoList.size)  //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
                             {
-                            }
-                        }
-                        if (i + 3 < viewModel.drinkInfoList.size)  //sprawdzenie czy nie jest brany element, który nie istnieje (jest poza listą)
-                        {
-                            Box(modifier = Modifier.weight(1f).padding(16.dp))
-                            {
-                                ImageCard(
-                                    drink = viewModel.drinkInfoList[i + 3],
-                                    navController = navController
-                                )
-                            }
-                        } else {
-                            Box(
-                                modifier = Modifier.weight(1f).padding(16.dp)
-                            )  //Wstawienie pustego pudła aby nie zaburzyć układu
-                            {
+                                Box(modifier = Modifier.weight(1f).padding(16.dp))
+                                {
+                                    ImageCard(
+                                        drink = viewModel.drinkInfoList[i + 3],
+                                        navController = navController
+                                    )
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier.weight(1f).padding(16.dp)
+                                )  //Wstawienie pustego pudła aby nie zaburzyć układu
+                                {
+                                }
                             }
                         }
                     }
@@ -222,7 +255,7 @@ fun ImageCard(
     )
     {
         Box(
-            modifier = Modifier.height(200.dp).fillMaxWidth().background(Color.Yellow),
+            modifier = Modifier.height(200.dp).fillMaxWidth(),
             contentAlignment = Alignment.Center)
         {
             Image(
@@ -253,7 +286,7 @@ fun ImageCard(
                 onClick =
                     {
                         //Przejście do innej aktywności (informacji o drinku)
-                        navController.navigate(Screen.DetailScreen.withArgs(drink.title,drink.description,drink.howToPrepare,drink.time.toString(),drink.imageId.toString()))   //Przejście do nowej sceny
+                        navController.navigate(Screen.DetailScreen.withArgs(drink.title,drink.description,drink.howToPrepare,drink.time.toString(),drink.imageId.toString(),drink.uid.toString()))   //Przejście do nowej sceny
                     }
             )
             {

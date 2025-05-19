@@ -2,11 +2,13 @@ package com.example.drinki
 
 //Klasa do trzymania informacji o drinkach
 data class DrinkInfo(
+    var uid : Int = 0,
     var imageId : Int = R.drawable.bluelagoon,
     var description : String,
     var howToPrepare : String,
     var title : String,
-    var time : Int
+    var time : Int,
+    var isFavorite : Boolean
 )
 
 //Zwraca listę drinków
@@ -67,15 +69,15 @@ fun getDrinkList(): List<DrinkInfo>
 
 
     return listOf(
-        DrinkInfo(R.drawable.bluelagoon, text1,"Wstrząsnąć w shakerze z lodem", "Blue Lagoon",15),
-        DrinkInfo(R.drawable.cubalibre, text2,"Delikatnie zamieszać w szklance", "Cuba Libre",10),
-        DrinkInfo(R.drawable.eldiablo, text3,"Zamieszać w szklance z lodem", "El Diablo",10),
-        DrinkInfo(R.drawable.espressomartini, text4,"Mocno wstrząsnąć w shakerze z lodem", "Espresso Martini",20),
-        DrinkInfo(R.drawable.godfather, text5,"Zamieszać w szklance", "GodFather",10),
-        DrinkInfo(R.drawable.kamikaze, text6, "Wstrząsnąć w shakerze z lodem","Kamikaze",15),
-        DrinkInfo(R.drawable.mojito, text7,"Delikatnie zamieszać łyżką barmańską w szklance", "Mojito",10),
-        DrinkInfo(R.drawable.pinacolada, text8,"Wstrząsnąć w shakerze z lodem", "Pina Colada",20),
-        DrinkInfo(R.drawable.sexonbeach, text9,"Zamieszać delikatnie w szklance", "Sex On Beach",10),
+        DrinkInfo(0,R.drawable.bluelagoon, text1,"Wstrząsnąć w shakerze z lodem", "Blue Lagoon",15,false),
+        DrinkInfo(0,R.drawable.cubalibre, text2,"Delikatnie zamieszać w szklance", "Cuba Libre",10,false),
+        DrinkInfo(0,R.drawable.eldiablo, text3,"Zamieszać w szklance z lodem", "El Diablo",10,false),
+        DrinkInfo(0,R.drawable.espressomartini, text4,"Mocno wstrząsnąć w shakerze z lodem", "Espresso Martini",20,false),
+        DrinkInfo(0,R.drawable.godfather, text5,"Zamieszać w szklance", "GodFather",10,false),
+        DrinkInfo(0,R.drawable.kamikaze, text6, "Wstrząsnąć w shakerze z lodem","Kamikaze",15,false),
+        DrinkInfo(0,R.drawable.mojito, text7,"Delikatnie zamieszać łyżką barmańską w szklance", "Mojito",10,false),
+        DrinkInfo(0,R.drawable.pinacolada, text8,"Wstrząsnąć w shakerze z lodem", "Pina Colada",20,false),
+        DrinkInfo(0,R.drawable.sexonbeach, text9,"Zamieszać delikatnie w szklance", "Sex On Beach",10,false),
     )
 
 }
